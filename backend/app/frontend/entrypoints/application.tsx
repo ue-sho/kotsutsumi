@@ -1,3 +1,4 @@
+import './application.css'
 import { createRoot } from 'react-dom/client'
 import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from 'vite-plugin-ruby/inertia'
