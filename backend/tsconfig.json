@@ -23,9 +23,9 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/frontend/*"]
+      "@/*": ["./app/javascript/*"]
     }
   },
-  "include": ["app/frontend/**/*.ts", "app/frontend/**/*.tsx"],
+  "include": ["app/javascript/**/*.ts", "app/javascript/**/*.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
