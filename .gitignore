@@ -38,6 +38,8 @@ coverage
 # Misc
 *.tsbuildinfo
 .eslintcache
+vite.config.js
+vite.config.d.ts
 
 # Ruby/Rails (legacy)
 .ruby-lsp
