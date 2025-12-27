@@ -5,7 +5,7 @@
 | エンティティ | 説明 |
 |--------------|------|
 | User | ユーザー（認証・プロフィール） |
-| Goal | 目標（週単位の達成条件を持つ） |
+| WeeklyGoal | 週単位目標（週ごとの達成条件を持つ） |
 | ActionLog | 行動記録（日々の実績） |
 | DailyNote | 日次メモ（その日の状況・感情） |
 | WeeklySummary | 週次集計（達成判定結果） |
@@ -15,9 +15,9 @@
 ## 2. ER図（概念）
 
 ```
-┌──────────┐       ┌──────────┐
-│   User   │───┬───│   Goal   │
-└──────────┘   │   └──────────┘
+┌──────────┐       ┌──────────────┐
+│   User   │───┬───│  WeeklyGoal  │
+└──────────┘   │   └──────────────┘
                │         │
                │         │ 1:N
                │         ▼
@@ -37,9 +37,9 @@
                           │
                           │ N:1
                           ▼
-                    ┌──────────┐
-                    │   Goal   │
-                    └──────────┘
+                  ┌──────────────┐
+                  │  WeeklyGoal  │
+                  └──────────────┘
 ```
 
 ---
@@ -68,7 +68,7 @@
 
 ---
 
-### 3.2 Goal（目標）
+### 3.2 WeeklyGoal（週単位目標）
 
 | カラム | 型 | 制約 | 説明 |
 |--------|------|------|------|
@@ -89,8 +89,8 @@
 - `COMPLETION`: 完了系（例：週1冊）
 
 **インデックス:**
-- `idx_goal_user_id` (user_id)
-- `idx_goal_user_active` (user_id, is_active)
+- `idx_weekly_goal_user_id` (user_id)
+- `idx_weekly_goal_user_active` (user_id, is_active)
 
 ---
 
@@ -99,7 +99,7 @@
 | カラム | 型 | 制約 | 説明 |
 |--------|------|------|------|
 | id | VARCHAR(36) | PK | UUID |
-| goal_id | VARCHAR(36) | FK, NOT NULL | 対象目標 |
+| weekly_goal_id | VARCHAR(36) | FK, NOT NULL | 対象週単位目標 |
 | user_id | VARCHAR(36) | FK, NOT NULL | 所有ユーザー（冗長化） |
 | date | DATE | NOT NULL | 記録日 |
 | value | INT | NOT NULL | 実績値 |
@@ -108,12 +108,12 @@
 | updated_at | DATETIME | NOT NULL | 更新日時 |
 
 **インデックス:**
-- `idx_action_log_goal_date` (goal_id, date)
+- `idx_action_log_weekly_goal_date` (weekly_goal_id, date)
 - `idx_action_log_user_date` (user_id, date)
 
 **備考:**
 - 1日に同じ目標に対して複数記録可能
-- `value` の意味は `Goal.goal_type` に依存
+- `value` の意味は `WeeklyGoal.goal_type` に依存
   - TIME: 分単位
   - COUNT: 回数
   - COMPLETION: 1（完了）/ 0（未完了）
@@ -145,7 +145,7 @@
 |--------|------|------|------|
 | id | VARCHAR(36) | PK | UUID |
 | user_id | VARCHAR(36) | FK, NOT NULL | 所有ユーザー |
-| goal_id | VARCHAR(36) | FK, NOT NULL | 対象目標 |
+| weekly_goal_id | VARCHAR(36) | FK, NOT NULL | 対象週単位目標 |
 | week_start | DATE | NOT NULL | 週開始日（月曜） |
 | total_value | INT | NOT NULL | 週間合計値 |
 | target_value | INT | NOT NULL | 目標値（スナップショット） |
@@ -154,14 +154,14 @@
 | updated_at | DATETIME | NOT NULL | 更新日時 |
 
 **制約:**
-- `UNIQUE (user_id, goal_id, week_start)` - 週×目標で一意
+- `UNIQUE (user_id, weekly_goal_id, week_start)` - 週×目標で一意
 
 **インデックス:**
 - `idx_weekly_summary_user_week` (user_id, week_start)
-- `idx_weekly_summary_goal_week` (goal_id, week_start)
+- `idx_weekly_summary_weekly_goal_week` (weekly_goal_id, week_start)
 
 **備考:**
-- `target_value` は Goal の値をスナップショットとして保存（目標変更の影響を受けない）
+- `target_value` は WeeklyGoal の値をスナップショットとして保存（目標変更の影響を受けない）
 - 週の開始は月曜日（ISO 8601）
 
 ---
@@ -178,7 +178,7 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  goals          Goal[]
+  weeklyGoals    WeeklyGoal[]
   actionLogs     ActionLog[]
   dailyNotes     DailyNote[]
   weeklySummaries WeeklySummary[]
@@ -186,7 +186,7 @@ model User {
   @@map("users")
 }
 
-model Goal {
+model WeeklyGoal {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
   title       String   @db.VarChar(200)
@@ -204,23 +204,23 @@ model Goal {
 
   @@index([userId])
   @@index([userId, isActive])
-  @@map("goals")
+  @@map("weekly_goals")
 }
 
 model ActionLog {
-  id        String   @id @default(uuid())
-  goalId    String   @map("goal_id")
-  userId    String   @map("user_id")
-  date      DateTime @db.Date
-  value     Int
-  note      String?  @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  weeklyGoalId String   @map("weekly_goal_id")
+  userId       String   @map("user_id")
+  date         DateTime @db.Date
+  value        Int
+  note         String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeklyGoal WeeklyGoal @relation(fields: [weeklyGoalId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([goalId, date])
+  @@index([weeklyGoalId, date])
   @@index([userId, date])
   @@map("action_logs")
 }
@@ -241,22 +241,22 @@ model DailyNote {
 }
 
 model WeeklySummary {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  goalId      String   @map("goal_id")
-  weekStart   DateTime @map("week_start") @db.Date
-  totalValue  Int      @map("total_value")
-  targetValue Int      @map("target_value")
-  isAchieved  Boolean  @map("is_achieved")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  weeklyGoalId String   @map("weekly_goal_id")
+  weekStart    DateTime @map("week_start") @db.Date
+  totalValue   Int      @map("total_value")
+  targetValue  Int      @map("target_value")
+  isAchieved   Boolean  @map("is_achieved")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeklyGoal WeeklyGoal @relation(fields: [weeklyGoalId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, goalId, weekStart])
+  @@unique([userId, weeklyGoalId, weekStart])
   @@index([userId, weekStart])
-  @@index([goalId, weekStart])
+  @@index([weeklyGoalId, weekStart])
   @@map("weekly_summaries")
 }
 
@@ -273,14 +273,13 @@ enum GoalType {
 
 ### 5.1 ID 戦略
 - **UUID** を採用（公開 URL に含まれるため推測困難にする）
-- 代替案: ULID（ソート可能）も検討可能
 
 ### 5.2 週の定義
 - **ISO 8601** に準拠（月曜始まり）
 - `week_start` は常に月曜日の日付を格納
 
 ### 5.3 ActionLog の user_id
-- `Goal` 経由で取得可能だが、クエリ効率のため冗長に保持
+- `WeeklyGoal` 経由で取得可能だが、クエリ効率のため冗長に保持
 - ユーザーの日別記録一覧を高速に取得可能
 
 ### 5.4 WeeklySummary の target_value
@@ -294,3 +293,21 @@ enum GoalType {
 ### 5.6 公開機能
 - `username` を使った公開 URL（`/u/{username}`）
 - 別途「公開/非公開」フラグは設けない（MVP）
+
+### 5.7 将来拡張: 年間目標
+将来的に「年間目標」を追加し、週単位目標を逆算する機能を追加可能：
+
+```
+YearlyGoal（年間目標）
+├── id
+├── user_id
+├── title（例: 英語学習 500時間）
+├── year（2025）
+└── target_value
+
+WeeklyGoal
+├── yearly_goal_id (FK, nullable) ← 追加
+└── ...
+```
+
+MVP では週単位目標（WeeklyGoal）のみで実装し、後から YearlyGoal を追加する。
