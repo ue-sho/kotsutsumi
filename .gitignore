@@ -15,10 +15,7 @@ build
 !.env.example
 
 # IDE
-.idea
 .vscode
-*.swp
-*.swo
 
 # OS
 .DS_Store
@@ -40,6 +37,3 @@ coverage
 .eslintcache
 vite.config.js
 vite.config.d.ts
-
-# Ruby/Rails (legacy)
-.ruby-lsp
