@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import type { Response, Request } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService, UserResponse } from './auth.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: AuthService;
 
   const mockAuthService = {
     signup: jest.fn(),
@@ -45,7 +45,6 @@ describe('AuthController', () => {
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-    authService = module.get<AuthService>(AuthService);
 
     jest.clearAllMocks();
   });
@@ -70,7 +69,7 @@ describe('AuthController', () => {
       mockAuthService.generateAccessToken.mockReturnValue('access-token');
       mockAuthService.generateRefreshToken.mockReturnValue('refresh-token');
 
-      const result = await controller.signup(signupDto, mockResponse as any);
+      const result = await controller.signup(signupDto, mockResponse as unknown as Response);
 
       expect(result).toEqual({ user: mockUser });
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
@@ -103,7 +102,7 @@ describe('AuthController', () => {
       mockAuthService.generateAccessToken.mockReturnValue('access-token');
       mockAuthService.generateRefreshToken.mockReturnValue('refresh-token');
 
-      const result = await controller.login(loginDto, mockResponse as any);
+      const result = await controller.login(loginDto, mockResponse as unknown as Response);
 
       expect(result).toEqual({ user: mockUser });
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
@@ -112,7 +111,7 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should clear cookies on logout', () => {
-      const result = controller.logout(mockResponse as any);
+      const result = controller.logout(mockResponse as unknown as Response);
 
       expect(result).toEqual({ message: 'Logged out successfully' });
       expect(mockResponse.clearCookie).toHaveBeenCalledWith('access_token', {
@@ -141,7 +140,10 @@ describe('AuthController', () => {
       mockAuthService.generateAccessToken.mockReturnValue('new-access-token');
       mockAuthService.generateRefreshToken.mockReturnValue('new-refresh-token');
 
-      const result = await controller.refresh(mockRequest as any, mockResponse as any);
+      const result = await controller.refresh(
+        mockRequest as unknown as Request,
+        mockResponse as unknown as Response,
+      );
 
       expect(result).toEqual({ message: 'Token refreshed successfully' });
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
@@ -151,7 +153,10 @@ describe('AuthController', () => {
       const requestWithoutToken = { cookies: {} };
 
       await expect(
-        controller.refresh(requestWithoutToken as any, mockResponse as any),
+        controller.refresh(
+          requestWithoutToken as unknown as Request,
+          mockResponse as unknown as Response,
+        ),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -162,9 +167,9 @@ describe('AuthController', () => {
       });
       mockAuthService.validateUser.mockResolvedValue(null);
 
-      await expect(controller.refresh(mockRequest as any, mockResponse as any)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        controller.refresh(mockRequest as unknown as Request, mockResponse as unknown as Response),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 

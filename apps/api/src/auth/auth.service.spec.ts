@@ -10,8 +10,6 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: PrismaService;
-  let jwtService: JwtService;
 
   const mockPrismaService = {
     user: {
@@ -45,8 +43,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
 
     jest.clearAllMocks();
   });
@@ -179,7 +175,7 @@ describe('AuthService', () => {
       const result = service.generateAccessToken(user);
 
       expect(result).toBe('access-token');
-      expect(jwtService.sign).toHaveBeenCalledWith(
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
         { sub: user.id, username: user.username },
         { secret: 'test-secret', expiresIn: 15 * 60 },
       );
@@ -199,7 +195,7 @@ describe('AuthService', () => {
       const result = service.generateRefreshToken(user);
 
       expect(result).toBe('refresh-token');
-      expect(jwtService.sign).toHaveBeenCalledWith(
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
         { sub: user.id, username: user.username },
         { secret: 'test-secret', expiresIn: 7 * 24 * 60 * 60 },
       );
