@@ -91,12 +91,10 @@ describe('AuthService', () => {
     });
 
     it('should throw ConflictException if username already exists', async () => {
-      mockPrismaService.user.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          id: 'existing-user',
-          username: signupDto.username,
-        });
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+        id: 'existing-user',
+        username: signupDto.username,
+      });
 
       await expect(service.signup(signupDto)).rejects.toThrow(ConflictException);
     });
@@ -223,9 +221,7 @@ describe('AuthService', () => {
         throw new Error('Invalid token');
       });
 
-      expect(() => service.verifyRefreshToken('invalid-token')).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => service.verifyRefreshToken('invalid-token')).toThrow(UnauthorizedException);
     });
   });
 });

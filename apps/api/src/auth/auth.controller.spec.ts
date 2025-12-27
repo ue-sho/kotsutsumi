@@ -141,10 +141,7 @@ describe('AuthController', () => {
       mockAuthService.generateAccessToken.mockReturnValue('new-access-token');
       mockAuthService.generateRefreshToken.mockReturnValue('new-refresh-token');
 
-      const result = await controller.refresh(
-        mockRequest as any,
-        mockResponse as any,
-      );
+      const result = await controller.refresh(mockRequest as any, mockResponse as any);
 
       expect(result).toEqual({ message: 'Token refreshed successfully' });
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
@@ -165,9 +162,9 @@ describe('AuthController', () => {
       });
       mockAuthService.validateUser.mockResolvedValue(null);
 
-      await expect(
-        controller.refresh(mockRequest as any, mockResponse as any),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.refresh(mockRequest as any, mockResponse as any)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

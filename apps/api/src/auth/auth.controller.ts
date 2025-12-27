@@ -24,10 +24,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  private setTokenCookies(
-    res: Response,
-    user: UserResponse,
-  ): void {
+  private setTokenCookies(res: Response, user: UserResponse): void {
     const accessToken = this.authService.generateAccessToken(user);
     const refreshToken = this.authService.generateRefreshToken(user);
 
@@ -58,10 +55,7 @@ export class AuthController {
   @Public()
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  async signup(
-    @Body() dto: SignupDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async signup(@Body() dto: SignupDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.signup(dto);
     this.setTokenCookies(res, result.user);
     return result;
@@ -70,10 +64,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(dto);
     this.setTokenCookies(res, result.user);
     return result;
@@ -89,10 +80,7 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.refresh_token;
     if (!refreshToken) {
       throw new UnauthorizedException({
