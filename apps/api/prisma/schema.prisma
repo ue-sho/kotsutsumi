@@ -5,3 +5,95 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique @db.VarChar(50)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  displayName  String?   @map("display_name") @db.VarChar(100)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  weeklyGoals     WeeklyGoal[]
+  actionLogs      ActionLog[]
+  dailyNotes      DailyNote[]
+  weeklySummaries WeeklySummary[]
+
+  @@map("users")
+}
+
+model WeeklyGoal {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  goalType    String   @map("goal_type") @db.VarChar(20)
+  targetValue Int      @map("target_value")
+  targetUnit  String   @map("target_unit") @db.VarChar(20)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionLogs      ActionLog[]
+  weeklySummaries WeeklySummary[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("weekly_goals")
+}
+
+model ActionLog {
+  id           String   @id @default(uuid())
+  weeklyGoalId String   @map("weekly_goal_id")
+  userId       String   @map("user_id")
+  date         DateTime @db.Date
+  value        Int
+  note         String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  weeklyGoal WeeklyGoal @relation(fields: [weeklyGoalId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([weeklyGoalId, date])
+  @@index([userId, date])
+  @@map("action_logs")
+}
+
+model DailyNote {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  date      DateTime @db.Date
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_notes")
+}
+
+model WeeklySummary {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  weeklyGoalId String   @map("weekly_goal_id")
+  weekStart    DateTime @map("week_start") @db.Date
+  totalValue   Int      @map("total_value")
+  targetValue  Int      @map("target_value")
+  isAchieved   Boolean  @map("is_achieved")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeklyGoal WeeklyGoal @relation(fields: [weeklyGoalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weeklyGoalId, weekStart])
+  @@index([userId, weekStart])
+  @@index([weeklyGoalId, weekStart])
+  @@map("weekly_summaries")
+}
+
